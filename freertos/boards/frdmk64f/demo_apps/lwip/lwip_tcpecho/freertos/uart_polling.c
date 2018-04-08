@@ -1,0 +1,105 @@
+/*
+ * The Clear BSD License
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
+ * Copyright 2016-2017 NXP
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted (subject to the limitations in the disclaimer below) provided
+ *  that the following conditions are met:
+ *
+ * o Redistributions of source code must retain the above copyright notice, this list
+ *   of conditions and the following disclaimer.
+ *
+ * o Redistributions in binary form must reproduce the above copyright notice, this
+ *   list of conditions and the following disclaimer in the documentation and/or
+ *   other materials provided with the distribution.
+ *
+ * o Neither the name of the copyright holder nor the names of its
+ *   contributors may be used to endorse or promote products derived from this
+ *   software without specific prior written permission.
+ *
+ * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS LICENSE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "board.h"
+#include "fsl_uart.h"
+
+#include "pin_mux.h"
+#include "clock_config.h"
+#include "fsl_debug_console.h"
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
+/* UART instance and clock */
+#define DEMO_UART UART3
+#define DEMO_UART_CLKSRC UART3_CLK_SRC
+#define DEMO_UART_CLK_FREQ CLOCK_GetFreq(UART3_CLK_SRC)
+
+
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
+
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
+
+uint8_t txbuff[] = "Uart polling example\r\nBoard will send back received characters\r\n";
+uint8_t rxbuff[20] = {0};
+
+/*******************************************************************************
+ * Code
+ ******************************************************************************/
+/*!
+ * @brief Main function
+ */
+uint8_t ch[1800];
+int UartPolling(void)
+{
+
+    uart_config_t config;
+
+
+    /*
+     * config.baudRate_Bps = 115200U;
+     * config.parityMode = kUART_ParityDisabled;
+     * config.stopBitCount = kUART_OneStopBit;
+     * config.txFifoWatermark = 0;
+     * config.rxFifoWatermark = 1;
+     * config.enableTx = false;
+     * config.enableRx = false;
+     */
+    UART_GetDefaultConfig(&config);
+    config.baudRate_Bps = BOARD_DEBUG_UART_BAUDRATE;
+    //config.enableTx = true;
+    config.enableRx = true;
+
+    UART_Init(DEMO_UART, &config, DEMO_UART_CLK_FREQ);
+
+    PRINTF("Uart Demo\n");
+    //UART_WriteBlocking(DEMO_UART, txbuff, sizeof(txbuff) - 1);
+
+    while (1)
+    {
+
+    	status_t r;
+        if ((r = UART_ReadBlocking(DEMO_UART, ch, 8)) == kStatus_Success)
+        {
+        	PRINTF("ch = %s\n" , ch);
+        } else {
+        	PRINTF("r = %d\n" , r);
+        }
+        //UART_WriteBlocking(DEMO_UART, &ch, 1);
+    }
+}
